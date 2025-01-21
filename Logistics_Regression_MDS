@@ -1,0 +1,41 @@
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def initialize_weights(n_features):
+    weights = np.zeros(n_features)
+    bias = 0
+    return weights, bias
+
+def compute_loss_and_gradient(X, y, weights, bias):
+    n_samples = X.shape[0]
+    linear_model = np.dot(X, weights) + bias
+    predictions = sigmoid(linear_model)
+    loss = -(1/n_samples) * np.sum(y * np.log(predictions + 1e-15) + (1 - y) * np.log(1 - predictions + 1e-15))
+    dw = (1/n_samples) * np.dot(X.T, (predictions - y))
+    db = (1/n_samples) * np.sum(predictions - y)
+    return loss, dw, db
+
+def logistics_regression_mds(X, y, learning_rate=0.01, epochs=1000):
+    n_samples, n_features = X.shape
+    weights, bias = initialize_weights(n_features)
+    for i in range(epochs):
+        loss, dw, db = compute_loss_and_gradient(X, y, weights, bias)
+        weights -= learning_rate * dw
+        bias -= learning_rate * db
+        if i % 100 == 0:
+            print(f"Epoch {i}, Loss: {loss:.4f}")
+    return weights, bias
+
+if __name__ == "__main__":
+    from sklearn.datasets import make_classification
+    X, y = make_classification(n_samples=100, n_features=5, n_classes=2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    weights, bias = logistics_regression_mds(X_train, y_train, learning_rate=0.1, epochs=1000)
+    linear_model = np.dot(X_test, weights) + bias
+    y_pred = sigmoid(linear_model) >= 0.5
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Test Accuracy: {accuracy:.4f}")
